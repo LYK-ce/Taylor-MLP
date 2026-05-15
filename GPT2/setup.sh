@@ -11,13 +11,12 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # ── Dataset (ModelScope) ───────────────────────────────
 echo "=== [1/2] Downloading WikiText-2 dataset (ModelScope) ==="
-DATASET_DIR="/vepfs-mlp2/c20250205/240804016/Datasets/wikitext"
-mkdir -p "${DATASET_DIR}"
-echo "  Target: ${DATASET_DIR}"
+export MODELSCOPE_DATASETS_CACHE="/vepfs-mlp2/c20250205/240804016/Datasets"
+echo "  Cache: ${MODELSCOPE_DATASETS_CACHE}"
 python -c "
-from modelscope import snapshot_download
-snapshot_download('AI-ModelScope/wikitext', cache_dir='${DATASET_DIR}')
-print('Done.')
+from modelscope.msdatasets import MsDataset
+ds = MsDataset.load('wikitext', subset_name='wikitext-2-v1', split='train')
+print(f'Done. {len(ds)} samples.')
 "
 
 # ── Model ──────────────────────────────────────────────

@@ -7,12 +7,12 @@ PPL computation, Cosine Similarity, MSE, timing benchmarks,
 and shared data preparation (tokenize + chunk).
 """
 
-import os
 import time
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from modelscope.msdatasets import MsDataset
 
 import config
 
@@ -23,56 +23,26 @@ import config
 
 def Tokenize_And_Chunk(tokenizer, dataset_name=None, dataset_config=None,
                        max_samples=2000, seq_len=128, stride=None):
-    """
-    Load OpenWebText from local ModelScope download, tokenize and chunk.
-
-    Dataset is downloaded by setup.sh via snapshot_download to:
-        /vepfs-mlp2/c20250205/240804016/Datasets/openwebtext/
-    """
+    """Load WikiText-2 via ModelScope MsDataset, tokenize and chunk."""
     if stride is None:
         stride = seq_len
 
-    # Find data directory (snapshot_download creates a subdir)
-    data_root = os.path.join(config.HF_DATASETS_CACHE, "wikitext")
-    subdirs = [d for d in os.listdir(data_root)
-               if os.path.isdir(os.path.join(data_root, d))]
-    data_dir = os.path.join(data_root, subdirs[0]) if subdirs else data_root
+    ds = MsDataset.load(dataset_name or config.DATASET_NAME,
+                        subset_name=dataset_config or config.DATASET_CONFIG,
+                        split="train")
+    if hasattr(ds, "to_hf_dataset"):
+        ds = ds.to_hf_dataset()
 
-    # Collect text from files
     texts = []
     total_tokens = 0
-    for root, _, files in os.walk(data_dir):
-        for fname in files:
-            if not fname.endswith(('.txt', '.jsonl', '.json')):
-                continue
-            fpath = os.path.join(root, fname)
-            try:
-                with open(fpath, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        if fname.endswith(('.jsonl', '.json')):
-                            import json
-                            try:
-                                obj = json.loads(line)
-                                line = obj.get('text', '')
-                            except json.JSONDecodeError:
-                                pass
-                        if line:
-                            texts.append(line)
-                            total_tokens += len(tokenizer.encode(line))
-                            if total_tokens >= max_samples + seq_len:
-                                break
-            except Exception:
-                continue
-            if total_tokens >= max_samples + seq_len:
-                break
+    for example in ds:
+        text = example["text"]
+        if not text or not text.strip():
+            continue
+        texts.append(text)
+        total_tokens += len(tokenizer.encode(text))
         if total_tokens >= max_samples + seq_len:
             break
-
-    if not texts:
-        raise RuntimeError(f"No text found in {data_dir}. Run setup.sh first?")
 
     full_text = tokenizer.eos_token.join(texts)
     encodings = tokenizer(full_text, return_tensors="pt",

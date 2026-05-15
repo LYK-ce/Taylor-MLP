@@ -18,8 +18,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "openai-community", "gpt2")
 
 # ── Dataset ────────────────────────────────────────────────
 DATASET_NAME = "wikitext"
-DATASET_CONFIG = "wikitext-2-raw-v1"
-MODELSCOPE_DATASET_ID = "AI-ModelScope/wikitext"  # for download
+DATASET_CONFIG = "wikitext-2-v1"
 
 # ── Sampling ───────────────────────────────────────────────
 MAX_TRAIN_SAMPLES = 50000   # tokens for K-means fitting
@@ -40,10 +39,9 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(ROOT_DIR, "Cache", "GPT2")
 RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
-# ── HF Cache ───────────────────────────────────────────────
-HF_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
-os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
-os.environ.setdefault("HF_DATASETS_CACHE", HF_DATASETS_CACHE)
+# ── ModelScope Cache ────────────────────────────────────────
+MS_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
+os.environ.setdefault("MODELSCOPE_DATASETS_CACHE", MS_DATASETS_CACHE)
 
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42
