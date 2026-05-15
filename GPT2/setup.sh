@@ -4,20 +4,27 @@
 # ============================================================
 set -e
 
-# ── HuggingFace cache paths ────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# ── Download dataset (HF mirror) ──────────────────────
+export HF_ENDPOINT="https://hf-mirror.com"
 export HF_DATASETS_CACHE="/vepfs-mlp2/c20250205/240804016/Datasets"
-export HUGGINGFACE_HUB_CACHE="${ROOT_DIR}/Model"
 
-echo "Datasets cache: ${HF_DATASETS_CACHE}"
-echo "Model cache:    ${HUGGINGFACE_HUB_CACHE}"
-
-echo "=== Downloading OpenWebText dataset ==="
+echo "=== Downloading OpenWebText dataset (HF mirror) ==="
+echo "  Cache: ${HF_DATASETS_CACHE}"
 python -c "from datasets import load_dataset; load_dataset('openwebtext')"
 
-echo "=== Downloading GPT-2 model ==="
-python -c "from transformers import GPT2LMHeadModel, GPT2Tokenizer; GPT2LMHeadModel.from_pretrained('openai-community/gpt2'); GPT2Tokenizer.from_pretrained('openai-community/gpt2')"
+# ── Download model (ModelScope) ───────────────────────
+MODEL_CACHE="${ROOT_DIR}/Model"
 
+echo ""
+echo "=== Downloading GPT-2 model (ModelScope) ==="
+echo "  Cache: ${MODEL_CACHE}"
+python -c "
+from modelscope import snapshot_download
+snapshot_download('AI-ModelScope/gpt2', cache_dir='${MODEL_CACHE}')
+"
+
+echo ""
 echo "=== Setup complete ==="

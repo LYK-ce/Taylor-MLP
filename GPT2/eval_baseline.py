@@ -38,10 +38,11 @@ def Evaluate_Baseline(model_name=None, dataset_name=None, dataset_config=None,
     print(f"[Eval] Device: {device}")
 
     # ── Load model ──
-    print("[Eval] Loading model...")
-    model = GPT2LMHeadModel.from_pretrained(model_name).to(device)
+    model_path = config.MODEL_PATH
+    print(f"[Eval] Loading model from {model_path} ...")
+    model = GPT2LMHeadModel.from_pretrained(model_path).to(device)
     model.eval()
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    tokenizer = GPT2Tokenizer.from_pretrained(model_path)
     tokenizer.pad_token = tokenizer.eos_token
 
     n_params = sum(p.numel() for p in model.parameters())

@@ -48,11 +48,12 @@ class GPT2Wrapper:
         self._num_layers = 0
 
     def Load(self):
-        """Load GPT-2 model and tokenizer."""
-        print(f"[Model] Loading {self.model_name}...")
-        self.model = GPT2LMHeadModel.from_pretrained(self.model_name).to(self.device)
+        """Load GPT-2 model (from local ModelScope cache) and tokenizer."""
+        model_path = config.MODEL_PATH
+        print(f"[Model] Loading from {model_path} ...")
+        self.model = GPT2LMHeadModel.from_pretrained(model_path).to(self.device)
         self.model.eval()
-        self.tokenizer = GPT2Tokenizer.from_pretrained(self.model_name)
+        self.tokenizer = GPT2Tokenizer.from_pretrained(model_path)
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
         # Determine number of layers

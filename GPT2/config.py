@@ -11,9 +11,14 @@ import torch
 import os
 
 # ── Model ──────────────────────────────────────────────────
-MODEL_NAME = "openai-community/gpt2"  # GPT-2 Small (12 layers, d_model=768)
-# Alternatives: "openai-community/gpt2-medium" (24 layers, d_model=1024)
-#              "openai-community/gpt2-large"  (36 layers, d_model=1280)
+# ModelScope mirror for downloading; local path for loading.
+MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2"           # ModelScope 上的模型标识
+MODEL_DIR = os.path.join(ROOT_DIR, "Model")           # 本地模型目录
+MODEL_PATH = os.path.join(MODEL_DIR, "AI-ModelScope", "gpt2")  # 下载后的本地路径
+# Alternatives when switching:
+#   Medium: MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2-medium"
+#   Large:  MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2-large"
+#   (update MODEL_PATH accordingly)
 
 # ── Dataset ────────────────────────────────────────────────
 DATASET_NAME = "openwebtext"
@@ -39,13 +44,13 @@ CACHE_DIR = os.path.join(ROOT_DIR, "Cache", "GPT2")
 RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
 # ── HuggingFace Cache ──────────────────────────────────────
-# Custom cache paths for datasets and models.
+# Dataset: download via HF mirror, cache to NVMe storage.
+# Model: downloaded by setup.sh via ModelScope SDK to MODEL_PATH.
 HF_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
-HF_HUB_CACHE = os.path.join(ROOT_DIR, "Model")
 
-# Apply HF cache paths before any HF imports
+# Use HF mirror for datasets (faster in China)
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 os.environ.setdefault("HF_DATASETS_CACHE", HF_DATASETS_CACHE)
-os.environ.setdefault("HUGGINGFACE_HUB_CACHE", HF_HUB_CACHE)
 
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42
