@@ -17,8 +17,9 @@ MODEL_DIR = os.path.join(ROOT_DIR, "Model")
 MODEL_PATH = os.path.join(MODEL_DIR, "openai-community", "gpt2")
 
 # ── Dataset ────────────────────────────────────────────────
-DATASET_NAME = "openwebtext"
-DATASET_CONFIG = None  # No sub-config
+DATASET_NAME = "wikitext"
+DATASET_CONFIG = "wikitext-2-raw-v1"
+MODELSCOPE_DATASET_ID = "AI-ModelScope/wikitext"  # for download
 
 # ── Sampling ───────────────────────────────────────────────
 MAX_TRAIN_SAMPLES = 50000   # tokens for K-means fitting

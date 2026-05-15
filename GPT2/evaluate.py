@@ -33,7 +33,7 @@ def Tokenize_And_Chunk(tokenizer, dataset_name=None, dataset_config=None,
         stride = seq_len
 
     # Find data directory (snapshot_download creates a subdir)
-    data_root = os.path.join(config.HF_DATASETS_CACHE, "openwebtext")
+    data_root = os.path.join(config.HF_DATASETS_CACHE, "wikitext")
     subdirs = [d for d in os.listdir(data_root)
                if os.path.isdir(os.path.join(data_root, d))]
     data_dir = os.path.join(data_root, subdirs[0]) if subdirs else data_root

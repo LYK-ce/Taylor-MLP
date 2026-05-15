@@ -9,14 +9,14 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# ── Dataset (ModelScope snapshot) ──────────────────────
-echo "=== [1/2] Downloading OpenWebText dataset (ModelScope) ==="
-DATASET_DIR="/vepfs-mlp2/c20250205/240804016/Datasets/openwebtext"
+# ── Dataset (ModelScope) ───────────────────────────────
+echo "=== [1/2] Downloading WikiText-2 dataset (ModelScope) ==="
+DATASET_DIR="/vepfs-mlp2/c20250205/240804016/Datasets/wikitext"
 mkdir -p "${DATASET_DIR}"
 echo "  Target: ${DATASET_DIR}"
 python -c "
 from modelscope import snapshot_download
-snapshot_download('mapjack/openwebtext_dataset', cache_dir='${DATASET_DIR}')
+snapshot_download('AI-ModelScope/wikitext', cache_dir='${DATASET_DIR}')
 print('Done.')
 "
 
