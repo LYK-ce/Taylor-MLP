@@ -37,3 +37,24 @@ Agents 必须按照如下的工作流程进行工作
 
 
 
+
+# 初始化
+
+Agent 在首次启动时必须执行以下 Git SSH 环境初始化步骤：
+
+1. **检查 SSH 密钥权限** — 私钥文件（如 `~/.ssh/id_ed25519`）权限必须为 `600`，公钥为 `644`。若权限不正确，执行 `chmod 600 ~/.ssh/id_ed25519` 修复。若 `.ssh` 目录以只读方式挂载导致无法修改权限，则将密钥复制到可写目录（如 `~/.ssh-local/`）并修复权限。
+
+2. **配置 Git SSH 命令** — 设置环境变量 `GIT_SSH_COMMAND` 指向正确的 SSH 密钥和选项：
+   ```
+   export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new"
+   ```
+   若密钥在备用目录则改用对应路径（如 `-i ~/.ssh-local/id_ed25519`）。
+
+3. **验证 SSH 连接** — 执行 `ssh -T git@github.com`（或对应 Git 托管平台）确认认证成功，预期输出包含 `successfully authenticated`。
+
+4. **确保 Remote 使用 SSH URL** — 检查 `git remote -v`，若为 HTTPS URL 则改为 SSH 格式：
+   ```
+   git remote set-url origin git@github.com:<user>/<repo>.git
+   ```
+
+> **注意**：`.ssh` 目录应当以 **rw** 模式挂载。只读挂载会导致无法修正私钥权限和无法写入 `known_hosts`，从而阻碍 SSH 正常工作。
