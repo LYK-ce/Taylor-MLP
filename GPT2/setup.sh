@@ -4,6 +4,17 @@
 # ============================================================
 set -e
 
+# ── HuggingFace cache paths ────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+HF_CACHE="${ROOT_DIR}/.hf_cache"
+
+export HF_HOME="${HF_CACHE}"
+export HUGGINGFACE_HUB_CACHE="${HF_CACHE}/hub"
+export HF_DATASETS_CACHE="${HF_CACHE}/datasets"
+
+echo "HF cache root: ${HF_CACHE}"
+
 echo "=== Downloading OpenWebText dataset ==="
 python -c "from datasets import load_dataset; load_dataset('openwebtext')"
 

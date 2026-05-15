@@ -38,6 +38,20 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(ROOT_DIR, "Cache", "GPT2")
 RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
+# ── HuggingFace Cache ──────────────────────────────────────
+# Custom cache paths for datasets and models.
+# Set to None to use HF defaults (~/.cache/huggingface/).
+HF_HOME = os.path.join(ROOT_DIR, ".hf_cache")
+HF_HUB_CACHE = os.path.join(HF_HOME, "hub")
+HF_DATASETS_CACHE = os.path.join(HF_HOME, "datasets")
+
+# Apply HF cache paths before any HF imports
+for _key, _val in [("HF_HOME", HF_HOME),
+                    ("HUGGINGFACE_HUB_CACHE", HF_HUB_CACHE),
+                    ("HF_DATASETS_CACHE", HF_DATASETS_CACHE)]:
+    if _key not in os.environ:
+        os.environ[_key] = _val
+
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42
 DTYPE = torch.float32
