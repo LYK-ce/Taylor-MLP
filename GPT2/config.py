@@ -11,18 +11,14 @@ import torch
 import os
 
 # ── Model ──────────────────────────────────────────────────
-# ModelScope mirror for downloading; local path for loading.
-MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2"           # ModelScope 上的模型标识
-MODEL_DIR = os.path.join(ROOT_DIR, "Model")           # 本地模型目录
-MODEL_PATH = os.path.join(MODEL_DIR, "AI-ModelScope", "gpt2")  # 下载后的本地路径
-# Alternatives when switching:
-#   Medium: MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2-medium"
-#   Large:  MODELSCOPE_MODEL_ID = "AI-ModelScope/gpt2-large"
-#   (update MODEL_PATH accordingly)
+# Downloaded from ModelScope by setup.sh.
+MODELSCOPE_MODEL_ID = "openai-community/gpt2"
+MODEL_DIR = os.path.join(ROOT_DIR, "Model")
+MODEL_PATH = os.path.join(MODEL_DIR, "openai-community", "gpt2")
 
 # ── Dataset ────────────────────────────────────────────────
-DATASET_NAME = "openwebtext"
-DATASET_CONFIG = None  # OpenWebText has no sub-configs
+DATASET_NAME = "mapjack/openwebtext_dataset"
+DATASET_CONFIG = "default"  # ModelScope subset name
 
 # ── Sampling ───────────────────────────────────────────────
 MAX_TRAIN_SAMPLES = 50000   # tokens for K-means fitting
@@ -43,14 +39,10 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(ROOT_DIR, "Cache", "GPT2")
 RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
-# ── HuggingFace Cache ──────────────────────────────────────
-# Dataset: download via HF mirror, cache to NVMe storage.
-# Model: downloaded by setup.sh via ModelScope SDK to MODEL_PATH.
-HF_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
-
-# Use HF mirror for datasets (faster in China)
-os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
-os.environ.setdefault("HF_DATASETS_CACHE", HF_DATASETS_CACHE)
+# ── Dataset Cache ──────────────────────────────────────────
+# ModelScope MsDataset cache directory.
+MS_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
+os.environ.setdefault("MODELSCOPE_DATASETS_CACHE", MS_DATASETS_CACHE)
 
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42
