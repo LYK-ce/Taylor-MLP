@@ -7,51 +7,72 @@ PPL computation, Cosine Similarity, MSE, timing benchmarks,
 and shared data preparation (tokenize + chunk).
 """
 
+import os
 import time
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from datasets import load_dataset
+
+import config
 
 
 # ─────────────────────────────────────────────────────────────
 # Shared Data Preparation
 # ─────────────────────────────────────────────────────────────
 
-def Tokenize_And_Chunk(tokenizer, dataset_name, dataset_config=None,
+def Tokenize_And_Chunk(tokenizer, dataset_name=None, dataset_config=None,
                        max_samples=2000, seq_len=128, stride=None):
     """
-    Load dataset, tokenize, and chunk into sequences.
+    Load OpenWebText from local ModelScope download, tokenize and chunk.
 
-    Args:
-        tokenizer: HuggingFace tokenizer
-        dataset_name: dataset identifier
-        dataset_config: dataset sub-config (or None)
-        max_samples: maximum number of raw tokens to use
-        seq_len: sequence length for chunks
-        stride: stride between chunks (default: seq_len for data collection,
-                None = use seq_len)
-
-    Returns:
-        chunks: (num_chunks, seq_len) tensor
+    Dataset is downloaded by setup.sh via snapshot_download to:
+        /vepfs-mlp2/c20250205/240804016/Datasets/openwebtext/
     """
     if stride is None:
         stride = seq_len
 
-    dataset = load_dataset(dataset_name, dataset_config, split="train",
-                           trust_remote_code=True)
+    # Find data directory (snapshot_download creates a subdir)
+    data_root = os.path.join(config.HF_DATASETS_CACHE, "openwebtext")
+    subdirs = [d for d in os.listdir(data_root)
+               if os.path.isdir(os.path.join(data_root, d))]
+    data_dir = os.path.join(data_root, subdirs[0]) if subdirs else data_root
 
+    # Collect text from files
     texts = []
     total_tokens = 0
-    for example in dataset:
-        text = example["text"]
-        if not text or not text.strip():
-            continue
-        texts.append(text)
-        total_tokens += len(tokenizer.encode(text))
+    for root, _, files in os.walk(data_dir):
+        for fname in files:
+            if not fname.endswith(('.txt', '.jsonl', '.json')):
+                continue
+            fpath = os.path.join(root, fname)
+            try:
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        if fname.endswith(('.jsonl', '.json')):
+                            import json
+                            try:
+                                obj = json.loads(line)
+                                line = obj.get('text', '')
+                            except json.JSONDecodeError:
+                                pass
+                        if line:
+                            texts.append(line)
+                            total_tokens += len(tokenizer.encode(line))
+                            if total_tokens >= max_samples + seq_len:
+                                break
+            except Exception:
+                continue
+            if total_tokens >= max_samples + seq_len:
+                break
         if total_tokens >= max_samples + seq_len:
             break
+
+    if not texts:
+        raise RuntimeError(f"No text found in {data_dir}. Run setup.sh first?")
 
     full_text = tokenizer.eos_token.join(texts)
     encodings = tokenizer(full_text, return_tensors="pt",
@@ -60,14 +81,12 @@ def Tokenize_And_Chunk(tokenizer, dataset_name, dataset_config=None,
     if len(input_ids) > max_samples:
         input_ids = input_ids[:max_samples]
 
-    # Chunk with given stride
     chunks = []
     for i in range(0, len(input_ids) - seq_len, stride):
         chunk = input_ids[i:i + seq_len]
         if len(chunk) < seq_len:
             break
         chunks.append(chunk)
-
     return torch.stack(chunks)
 
 
