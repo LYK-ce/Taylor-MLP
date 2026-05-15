@@ -45,8 +45,8 @@ workspace
 │   ├── utils.py                       ← 共享工具 (K-means, Jacobian 计算, Taylor 推理, 序列化/反序列化)
 │   └── run_all.py                     ← 一键运行脚本
 │
-├── Cache/                             ← 中间结果存储（gitignore）
-│   └── GPT2/                          ← GPT-2 实验的预计算 cache
+├── Cache/                             ← Taylor 预计算中间结果（gitignore）
+│   └── GPT2/
 │       ├── layer_0_k_1/               ← 每层每k一个独立目录
 │       │   ├── centers.pt             ← k 个聚类中心
 │       │   ├── f_values.pt            ← k 个 F(X₀)
@@ -55,6 +55,7 @@ workspace
 │       ├── layer_0_k_4/
 │       │   └── ...
 │       └── layer_11_k_256/
+├── Model/                             ← HuggingFace 模型缓存（gitignore）
 ├── Result/
 │   └── GPT2/
 │       ├── step1_layer_cosim.csv      ← Phase B Step 1 结果
@@ -106,8 +107,9 @@ echo "Setup complete."
 | `MAX_TEST_SAMPLES` | `2000` | PPL 测试采样 token 数 |
 | `DEVICE` | `"cuda" if torch.cuda.is_available() else "cpu"` | 运行设备 |
 | `RESULT_DIR` | `"Result/GPT2"` | 输出目录 |
-| `CACHE_DIR` | `"Cache/GPT2"` | 预计算缓存目录（gitignore） |
-| `SEED` | `42` | 随机种子 |
+| `CACHE_DIR` | `"Cache/GPT2"` | Taylor 预计算缓存目录（gitignore） |
+| `HF_DATASETS_CACHE` | `/vepfs-mlp2/.../Datasets` | HuggingFace 数据集缓存 |
+| `HF_HUB_CACHE` | `Model/` | HuggingFace 模型缓存（gitignore） |
 
 ### 3.2 `eval_baseline.py` — 基线评估
 

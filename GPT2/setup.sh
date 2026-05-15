@@ -7,13 +7,12 @@ set -e
 # ── HuggingFace cache paths ────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-HF_CACHE="${ROOT_DIR}/.hf_cache"
 
-export HF_HOME="${HF_CACHE}"
-export HUGGINGFACE_HUB_CACHE="${HF_CACHE}/hub"
-export HF_DATASETS_CACHE="${HF_CACHE}/datasets"
+export HF_DATASETS_CACHE="/vepfs-mlp2/c20250205/240804016/Datasets"
+export HUGGINGFACE_HUB_CACHE="${ROOT_DIR}/Model"
 
-echo "HF cache root: ${HF_CACHE}"
+echo "Datasets cache: ${HF_DATASETS_CACHE}"
+echo "Model cache:    ${HUGGINGFACE_HUB_CACHE}"
 
 echo "=== Downloading OpenWebText dataset ==="
 python -c "from datasets import load_dataset; load_dataset('openwebtext')"

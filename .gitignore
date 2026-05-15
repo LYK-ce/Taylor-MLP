@@ -4,4 +4,4 @@ data/
 __pycache__/
 *.pyc
 Cache/
-.hf_cache/
+Model/

@@ -40,17 +40,12 @@ RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
 # ── HuggingFace Cache ──────────────────────────────────────
 # Custom cache paths for datasets and models.
-# Set to None to use HF defaults (~/.cache/huggingface/).
-HF_HOME = os.path.join(ROOT_DIR, ".hf_cache")
-HF_HUB_CACHE = os.path.join(HF_HOME, "hub")
-HF_DATASETS_CACHE = os.path.join(HF_HOME, "datasets")
+HF_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
+HF_HUB_CACHE = os.path.join(ROOT_DIR, "Model")
 
 # Apply HF cache paths before any HF imports
-for _key, _val in [("HF_HOME", HF_HOME),
-                    ("HUGGINGFACE_HUB_CACHE", HF_HUB_CACHE),
-                    ("HF_DATASETS_CACHE", HF_DATASETS_CACHE)]:
-    if _key not in os.environ:
-        os.environ[_key] = _val
+os.environ.setdefault("HF_DATASETS_CACHE", HF_DATASETS_CACHE)
+os.environ.setdefault("HUGGINGFACE_HUB_CACHE", HF_HUB_CACHE)
 
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42
