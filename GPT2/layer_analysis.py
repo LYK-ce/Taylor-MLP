@@ -14,12 +14,11 @@ import os
 import time
 
 import torch
-from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
 from utils import Load_Cache, Taylor_Predict_Batch
-from evaluate import Compute_Cosine_Similarity, Compute_Mse, Benchmark_Ffn
+from evaluate import Compute_Cosine_Similarity, Compute_Mse, Benchmark_Ffn, Tokenize_And_Chunk
 
 
 def Analyze_Layers(model_name=None, dataset_name=None, dataset_config=None,
@@ -45,37 +44,13 @@ def Analyze_Layers(model_name=None, dataset_name=None, dataset_config=None,
     wrapper = GPT2Wrapper(model_name=model_name, device=device)
     wrapper.Load()
 
-    dataset = load_dataset(dataset_name, dataset_config, split="train",
-                           trust_remote_code=True)
-    # Use last portion of training set as "test" for Taylor evaluation
-    texts = []
-    total_tokens = 0
-    for example in dataset:
-        text = example["text"]
-        if not text or not text.strip():
-            continue
-        texts.append(text)
-        total_tokens += len(wrapper.tokenizer.encode(text))
-        if total_tokens >= max_samples * 2 + seq_len:
-            break
-
-    full_text = wrapper.tokenizer.eos_token.join(texts)
-    encodings = wrapper.tokenizer(full_text, return_tensors="pt",
-                                  truncation=True, max_length=total_tokens)
-    input_ids = encodings["input_ids"][0]
-
-    # Use second half for test
-    split = len(input_ids) // 2
-    test_ids = input_ids[split:split + max_samples]
-
-    chunks = []
-    stride = seq_len
-    for i in range(0, len(test_ids) - seq_len, stride):
-        chunk = test_ids[i:i + seq_len]
-        if len(chunk) < seq_len:
-            break
-        chunks.append(chunk)
-    test_chunks = torch.stack(chunks)
+    # Fetch 2x samples, use second half as test (disjoint from Phase A train)
+    test_chunks = Tokenize_And_Chunk(
+        wrapper.tokenizer, dataset_name, dataset_config,
+        max_samples=max_samples * 2, seq_len=seq_len, stride=seq_len,
+    )
+    split = len(test_chunks) // 2
+    test_chunks = test_chunks[split:]
 
     # Run forward with hooks
     wrapper.Register_Ffn_Hooks()
@@ -182,19 +157,26 @@ def Identify_Representative_Layers(cosim_csv_path=None):
     if cosim_csv_path is None:
         cosim_csv_path = os.path.join(config.RESULT_DIR, "step1_layer_cosim.csv")
 
-    import pandas as pd
-    df = pd.read_csv(cosim_csv_path)
+    import csv
+    rows = []
+    with open(cosim_csv_path, "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append({
+                "layer": int(row["layer"]),
+                "k": int(row["k"]),
+                "cosine_sim": float(row["cosine_sim"]),
+            })
 
-    # Use k=64 as reference
-    ref_k = df[df["k"] == 64]
-    if ref_k.empty:
-        ref_k = df[df["k"] == df["k"].max()]
+    # Use largest k as reference
+    max_k = max(r["k"] for r in rows)
+    ref_rows = [r for r in rows if r["k"] == max_k]
+    ref_rows.sort(key=lambda r: r["cosine_sim"])
 
-    sorted_layers = ref_k.sort_values("cosine_sim")
     return {
-        "least_linear": int(sorted_layers.iloc[0]["layer"]),
-        "median": int(sorted_layers.iloc[len(sorted_layers) // 2]["layer"]),
-        "most_linear": int(sorted_layers.iloc[-1]["layer"]),
+        "least_linear": ref_rows[0]["layer"],
+        "median": ref_rows[len(ref_rows) // 2]["layer"],
+        "most_linear": ref_rows[-1]["layer"],
     }
 
 

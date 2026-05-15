@@ -13,11 +13,11 @@ import os
 import time
 
 import torch
-from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
 from utils import Compute_Centers, Precompute_Centers, Save_Cache
+from evaluate import Tokenize_And_Chunk
 
 
 def Collect_Data(model_name=None, dataset_name=None, dataset_config=None,
@@ -49,39 +49,13 @@ def Collect_Data(model_name=None, dataset_name=None, dataset_config=None,
     wrapper.Load()
 
     # ── 2. Load dataset and tokenize ───────────────────
-    print("\n[2/4] Loading dataset...")
-    dataset = load_dataset(dataset_name, dataset_config, split="train",
-                           trust_remote_code=True)
-
-    texts = []
-    total_tokens = 0
-    for example in dataset:
-        text = example["text"]
-        if not text or not text.strip():
-            continue
-        texts.append(text)
-        total_tokens += len(wrapper.tokenizer.encode(text))
-        if total_tokens >= max_samples + seq_len:
-            break
-
-    full_text = wrapper.tokenizer.eos_token.join(texts)
-    encodings = wrapper.tokenizer(full_text, return_tensors="pt",
-                                  truncation=True, max_length=total_tokens)
-    input_ids = encodings["input_ids"][0]
-    if len(input_ids) > max_samples:
-        input_ids = input_ids[:max_samples]
-
-    # Chunk into sequences
-    chunks = []
-    stride = seq_len
-    for i in range(0, len(input_ids) - seq_len, stride):
-        chunk = input_ids[i:i + seq_len]
-        if len(chunk) < seq_len:
-            break
-        chunks.append(chunk)
-    input_ids = torch.stack(chunks)  # (num_seqs, seq_len)
+    print("\n[2/4] Tokenizing...")
+    input_ids = Tokenize_And_Chunk(
+        wrapper.tokenizer, dataset_name, dataset_config,
+        max_samples=max_samples, seq_len=seq_len, stride=seq_len,
+    )
     n_tokens = input_ids.numel()
-    print(f"  Tokenized: {n_tokens} tokens ({len(chunks)} seqs × {seq_len})")
+    print(f"  Tokenized: {n_tokens} tokens ({len(input_ids)} seqs × {seq_len})")
 
     # ── 3. Run forward pass w/ hooks ───────────────────
     print("\n[3/4] Running forward pass to collect FFN I/O...")

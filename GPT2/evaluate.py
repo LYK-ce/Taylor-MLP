@@ -3,7 +3,8 @@ Presented by KeJi
 Date: 2026-05-15
 GPT-2 Taylor-MLP — Evaluation Utilities.
 
-PPL computation, Cosine Similarity, MSE, and timing benchmarks.
+PPL computation, Cosine Similarity, MSE, timing benchmarks,
+and shared data preparation (tokenize + chunk).
 """
 
 import time
@@ -11,6 +12,63 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from datasets import load_dataset
+
+
+# ─────────────────────────────────────────────────────────────
+# Shared Data Preparation
+# ─────────────────────────────────────────────────────────────
+
+def Tokenize_And_Chunk(tokenizer, dataset_name, dataset_config=None,
+                       max_samples=2000, seq_len=128, stride=None):
+    """
+    Load dataset, tokenize, and chunk into sequences.
+
+    Args:
+        tokenizer: HuggingFace tokenizer
+        dataset_name: dataset identifier
+        dataset_config: dataset sub-config (or None)
+        max_samples: maximum number of raw tokens to use
+        seq_len: sequence length for chunks
+        stride: stride between chunks (default: seq_len for data collection,
+                None = use seq_len)
+
+    Returns:
+        chunks: (num_chunks, seq_len) tensor
+    """
+    if stride is None:
+        stride = seq_len
+
+    dataset = load_dataset(dataset_name, dataset_config, split="train",
+                           trust_remote_code=True)
+
+    texts = []
+    total_tokens = 0
+    for example in dataset:
+        text = example["text"]
+        if not text or not text.strip():
+            continue
+        texts.append(text)
+        total_tokens += len(tokenizer.encode(text))
+        if total_tokens >= max_samples + seq_len:
+            break
+
+    full_text = tokenizer.eos_token.join(texts)
+    encodings = tokenizer(full_text, return_tensors="pt",
+                          truncation=True, max_length=total_tokens)
+    input_ids = encodings["input_ids"][0]
+    if len(input_ids) > max_samples:
+        input_ids = input_ids[:max_samples]
+
+    # Chunk with given stride
+    chunks = []
+    for i in range(0, len(input_ids) - seq_len, stride):
+        chunk = input_ids[i:i + seq_len]
+        if len(chunk) < seq_len:
+            break
+        chunks.append(chunk)
+
+    return torch.stack(chunks)
 
 
 # ─────────────────────────────────────────────────────────────

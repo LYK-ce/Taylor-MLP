@@ -14,10 +14,10 @@ import time
 
 import torch
 import torch.nn as nn
-from datasets import load_dataset
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 import config
+from evaluate import Tokenize_And_Chunk
 
 
 def Evaluate_Baseline(model_name=None, dataset_name=None, dataset_config=None,
@@ -47,48 +47,15 @@ def Evaluate_Baseline(model_name=None, dataset_name=None, dataset_config=None,
     n_params = sum(p.numel() for p in model.parameters())
     print(f"[Eval] Model params: {n_params:,}")
 
-    # ── Load dataset ──
-    print("[Eval] Loading dataset...")
-    dataset = load_dataset(dataset_name, dataset_config, split="train",
-                           trust_remote_code=True)
-
-    # ── Tokenize ──
+    # ── Tokenize & chunk (sliding window) ──
     print("[Eval] Tokenizing...")
-    texts = []
-    total_tokens = 0
-    for example in dataset:
-        text = example["text"]
-        if not text or not text.strip():
-            continue
-        texts.append(text)
-        total_tokens += len(tokenizer.encode(text))
-        if total_tokens >= max_samples + seq_len:
-            break
-
-    full_text = tokenizer.eos_token.join(texts)
-    encodings = tokenizer(full_text, return_tensors="pt", truncation=True,
-                          max_length=total_tokens)
-
-    input_ids = encodings["input_ids"][0]
-    if len(input_ids) > max_samples:
-        input_ids = input_ids[:max_samples]
-
-    # ── Chunk into sequences ──
-    # Stride over tokens to construct seq_len-sized chunks
-    chunks = []
-    stride = seq_len  # non-overlapping
-    for i in range(0, len(input_ids) - seq_len, stride):
-        chunk = input_ids[i:i + seq_len]
-        if len(chunk) < seq_len:
-            break
-        chunks.append(chunk)
-    if chunks:
-        input_ids = torch.stack(chunks)
-    else:
-        input_ids = input_ids[:seq_len].unsqueeze(0)
+    input_ids = Tokenize_And_Chunk(
+        tokenizer, dataset_name, dataset_config,
+        max_samples=max_samples, seq_len=seq_len, stride=1,
+    )
 
     num_tokens = input_ids.numel()
-    print(f"[Eval] Evaluation tokens: {num_tokens} ({len(chunks)} sequences of {seq_len})")
+    print(f"[Eval] Evaluation tokens: {num_tokens} ({len(input_ids)} sequences of {seq_len})")
 
     # ── Run evaluation ──
     print("[Eval] Running inference...")

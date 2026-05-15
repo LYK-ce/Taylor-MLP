@@ -12,12 +12,11 @@ import csv
 import os
 
 import torch
-from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
 from utils import Load_Cache
-from evaluate import Compute_Ppl_Over_Dataset, Benchmark_Model_Forward
+from evaluate import Compute_Ppl_Over_Dataset, Benchmark_Model_Forward, Tokenize_And_Chunk
 
 
 def Test_Cumulative(model_name=None, dataset_name=None, dataset_config=None,
@@ -46,32 +45,10 @@ def Test_Cumulative(model_name=None, dataset_name=None, dataset_config=None,
 
     # ── 2. Tokenize test data ──────────────────────────
     print("[2/4] Preparing test data...")
-    dataset = load_dataset(dataset_name, dataset_config, split="train",
-                           trust_remote_code=True)
-    texts = []
-    total_tokens = 0
-    for example in dataset:
-        text = example["text"]
-        if not text or not text.strip():
-            continue
-        texts.append(text)
-        total_tokens += len(wrapper.tokenizer.encode(text))
-        if total_tokens >= max_samples + seq_len:
-            break
-
-    full_text = wrapper.tokenizer.eos_token.join(texts)
-    encodings = wrapper.tokenizer(full_text, return_tensors="pt",
-                                  truncation=True, max_length=total_tokens)
-    input_ids = encodings["input_ids"][0][:max_samples]
-
-    chunks = []
-    stride = seq_len
-    for i in range(0, len(input_ids) - seq_len, stride):
-        chunk = input_ids[i:i + seq_len]
-        if len(chunk) < seq_len:
-            break
-        chunks.append(chunk)
-    test_chunks = torch.stack(chunks)
+    test_chunks = Tokenize_And_Chunk(
+        wrapper.tokenizer, dataset_name, dataset_config,
+        max_samples=max_samples, seq_len=seq_len, stride=1,
+    )
 
     # ── 3. Baseline PPL ────────────────────────────────
     print("[3/4] Computing baseline PPL...")
