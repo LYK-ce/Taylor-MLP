@@ -16,11 +16,11 @@ from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
-from utils import load_cache
-from evaluate import compute_ppl_over_dataset, benchmark_model_forward
+from utils import Load_Cache
+from evaluate import Compute_Ppl_Over_Dataset, Benchmark_Model_Forward
 
 
-def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
+def Test_Cumulative(model_name=None, dataset_name=None, dataset_config=None,
                     max_samples=None, seq_len=None, batch_size=None,
                     k_values=None, device=None):
     """Phase B Step 3: cumulative replacement from last layer backward."""
@@ -41,7 +41,7 @@ def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
     # ── 1. Load model ──────────────────────────────────
     print("\n[1/4] Loading model...")
     wrapper = GPT2Wrapper(model_name=model_name, device=device)
-    wrapper.load()
+    wrapper.Load()
     n_layers = wrapper.num_layers
 
     # ── 2. Tokenize test data ──────────────────────────
@@ -75,12 +75,12 @@ def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
 
     # ── 3. Baseline PPL ────────────────────────────────
     print("[3/4] Computing baseline PPL...")
-    baseline = compute_ppl_over_dataset(wrapper.model, test_chunks,
+    baseline = Compute_Ppl_Over_Dataset(wrapper.model, test_chunks,
                                         batch_size=batch_size, device=device)
     print(f"  Baseline PPL: {baseline['ppl']:.4f}")
 
     sample_batch = test_chunks[:1]
-    orig_model_time = benchmark_model_forward(
+    orig_model_time = Benchmark_Model_Forward(
         wrapper.model, sample_batch, device=device)
     print(f"  Original model forward: {orig_model_time:.4f} ms")
 
@@ -99,7 +99,7 @@ def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
     for k in k_values:
         print(f"\n  k={k}:")
         # Restore all before starting new k sweep
-        wrapper.restore_all_ffns()
+        wrapper.Restore_All_Ffns()
 
         for num_replaced in range(1, n_layers + 1):
             # Layer to replace: from last backward
@@ -111,15 +111,15 @@ def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
                 print(f"    Layer {layer_idx}: cache not found, stopping")
                 break
 
-            cache = load_cache(cache_dir, device=device)
-            wrapper.replace_ffn(layer_idx, cache)
+            cache = Load_Cache(cache_dir, device=device)
+            wrapper.Replace_Ffn(layer_idx, cache)
 
             # Measure PPL
-            result = compute_ppl_over_dataset(
+            result = Compute_Ppl_Over_Dataset(
                 wrapper.model, test_chunks, batch_size=batch_size, device=device)
 
             # Measure model speedup
-            taylor_model_time = benchmark_model_forward(
+            taylor_model_time = Benchmark_Model_Forward(
                 wrapper.model, sample_batch, device=device)
             speedup = orig_model_time / taylor_model_time if taylor_model_time > 0 else 0
 
@@ -158,7 +158,7 @@ def test_cumulative(model_name=None, dataset_name=None, dataset_config=None,
             w.writerow(r)
 
     # Restore model
-    wrapper.restore_all_ffns()
+    wrapper.Restore_All_Ffns()
 
     print(f"\nResults saved to {save_path}")
     print("Done.")
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     if args.k:
         k_values = [int(x.strip()) for x in args.k.split(",")]
 
-    test_cumulative(
+    Test_Cumulative(
         model_name=args.model,
         dataset_name=args.dataset,
         max_samples=args.max_samples,

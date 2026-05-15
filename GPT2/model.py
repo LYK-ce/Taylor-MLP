@@ -47,7 +47,7 @@ class GPT2Wrapper:
         self._originals = {}        # layer_idx -> original mlp module (for restore)
         self._num_layers = 0
 
-    def load(self):
+    def Load(self):
         """Load GPT-2 model and tokenizer."""
         print(f"[Model] Loading {self.model_name}...")
         self.model = GPT2LMHeadModel.from_pretrained(self.model_name).to(self.device)
@@ -70,7 +70,7 @@ class GPT2Wrapper:
 
     # ── Forward ─────────────────────────────────────────
 
-    def forward(self, input_ids, attention_mask=None):
+    def Forward(self, input_ids, attention_mask=None):
         """Run GPT-2 forward pass. Hooks capture FFN I/O automatically."""
         with torch.no_grad():
             outputs = self.model(
@@ -82,7 +82,7 @@ class GPT2Wrapper:
 
     # ── FFN Hook Management ─────────────────────────────
 
-    def _make_ffn_hook(self, layer_idx):
+    def _Make_Ffn_Hook(self, layer_idx):
         """Create a forward hook that captures FFN input/output for a layer."""
 
         def hook(module, input_tensor, output_tensor):
@@ -96,25 +96,25 @@ class GPT2Wrapper:
 
         return hook
 
-    def register_ffn_hooks(self):
+    def Register_Ffn_Hooks(self):
         """Register forward hooks on all MLP submodules."""
         self._hooks = []
         for i in range(self._num_layers):
             mlp = self.model.transformer.h[i].mlp
-            handle = mlp.register_forward_hook(self._make_ffn_hook(i))
+            handle = mlp.register_forward_hook(self._Make_Ffn_Hook(i))
             self._hooks.append(handle)
 
-    def remove_ffn_hooks(self):
+    def Remove_Ffn_Hooks(self):
         """Remove all registered hooks."""
         for h in self._hooks:
             h.remove()
         self._hooks = []
 
-    def clear_ffn_io(self):
+    def Clear_Ffn_Io(self):
         """Clear collected FFN I/O buffers."""
         self._ffn_io = {}
 
-    def get_ffn_io(self):
+    def Get_Ffn_Io(self):
         """
         Return concatenated FFN I/O tensors.
         Returns: dict layer_idx -> {"input": Tensor (N, d_model), "output": Tensor (N, d_model)}
@@ -129,7 +129,7 @@ class GPT2Wrapper:
 
     # ── Taylor Replacement ──────────────────────────────
 
-    def replace_ffn(self, layer_idx, cache):
+    def Replace_Ffn(self, layer_idx, cache):
         """
         Replace the FFN at layer_idx with a Taylor-approximated forward.
 
@@ -139,7 +139,7 @@ class GPT2Wrapper:
         """
         if layer_idx in self._originals:
             # Already replaced; restore first to avoid stacking
-            self.restore_ffn(layer_idx)
+            self.Restore_Ffn(layer_idx)
 
         mlp = self.model.transformer.h[layer_idx].mlp
         self._originals[layer_idx] = mlp
@@ -148,15 +148,15 @@ class GPT2Wrapper:
         taylor_module = _TaylorFFN(cache, self.device)
         self.model.transformer.h[layer_idx].mlp = taylor_module
 
-    def restore_ffn(self, layer_idx):
+    def Restore_Ffn(self, layer_idx):
         """Restore the original FFN at layer_idx."""
         if layer_idx in self._originals:
             self.model.transformer.h[layer_idx].mlp = self._originals.pop(layer_idx)
 
-    def restore_all_ffns(self):
+    def Restore_All_Ffns(self):
         """Restore all replaced FFNs."""
         for layer_idx in list(self._originals.keys()):
-            self.restore_ffn(layer_idx)
+            self.Restore_Ffn(layer_idx)
 
 
 # ─────────────────────────────────────────────────────────────

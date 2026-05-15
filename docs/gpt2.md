@@ -47,14 +47,14 @@ workspace
 │
 ├── Cache/                             ← 中间结果存储（gitignore）
 │   └── GPT2/                          ← GPT-2 实验的预计算 cache
-│       ├── layer_0/
+│       ├── layer_0_k_1/               ← 每层每k一个独立目录
 │       │   ├── centers.pt             ← k 个聚类中心
 │       │   ├── f_values.pt            ← k 个 F(X₀)
 │       │   ├── jacobians.pt           ← k 个 J(X₀)
 │       │   └── metadata.json          ← d_in, d_out, k, timestamp 等元信息
-│       ├── layer_1/
+│       ├── layer_0_k_4/
 │       │   └── ...
-│       └── layer_11/
+│       └── layer_11_k_256/
 ├── Result/
 │   └── GPT2/
 │       ├── step1_layer_cosim.csv      ← Phase B Step 1 结果

@@ -20,7 +20,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import config
 
 
-def evaluate_baseline(model_name=None, dataset_name=None, dataset_config=None,
+def Evaluate_Baseline(model_name=None, dataset_name=None, dataset_config=None,
                       max_samples=None, seq_len=None, batch_size=None,
                       device=None):
     """Run baseline evaluation and return metrics dict."""
@@ -170,7 +170,7 @@ if __name__ == "__main__":
                         help="Sequence length")
     args = parser.parse_args()
 
-    evaluate_baseline(
+    Evaluate_Baseline(
         model_name=args.model,
         dataset_name=args.dataset,
         max_samples=args.max_samples,

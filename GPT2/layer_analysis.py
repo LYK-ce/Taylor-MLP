@@ -18,11 +18,11 @@ from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
-from utils import load_cache, taylor_predict_batch
-from evaluate import compute_cosine_similarity, compute_mse, benchmark_ffn
+from utils import Load_Cache, Taylor_Predict_Batch
+from evaluate import Compute_Cosine_Similarity, Compute_Mse, Benchmark_Ffn
 
 
-def analyze_layers(model_name=None, dataset_name=None, dataset_config=None,
+def Analyze_Layers(model_name=None, dataset_name=None, dataset_config=None,
                    max_samples=None, seq_len=None, batch_size=None,
                    k_values=None, device=None):
     """Phase B Step 1: per-layer Taylor accuracy analysis."""
@@ -43,7 +43,7 @@ def analyze_layers(model_name=None, dataset_name=None, dataset_config=None,
     # ── 1. Load model + collect test FFN I/O ────────────
     print("\n[1/3] Collecting test FFN I/O...")
     wrapper = GPT2Wrapper(model_name=model_name, device=device)
-    wrapper.load()
+    wrapper.Load()
 
     dataset = load_dataset(dataset_name, dataset_config, split="train",
                            trust_remote_code=True)
@@ -78,21 +78,21 @@ def analyze_layers(model_name=None, dataset_name=None, dataset_config=None,
     test_chunks = torch.stack(chunks)
 
     # Run forward with hooks
-    wrapper.register_ffn_hooks()
-    wrapper.clear_ffn_io()
+    wrapper.Register_Ffn_Hooks()
+    wrapper.Clear_Ffn_Io()
     for i in range(0, len(test_chunks), batch_size):
         batch = test_chunks[i:i + batch_size].to(device)
-        wrapper.forward(batch)
-    wrapper.remove_ffn_hooks()
+        wrapper.Forward(batch)
+    wrapper.Remove_Ffn_Hooks()
 
-    ffn_io = wrapper.get_ffn_io()
+    ffn_io = wrapper.Get_Ffn_Io()
     print(f"  Test tokens: {test_chunks.numel()}")
 
     # ── 2. Benchmark original FFN ───────────────────────
     print("\n[2/3] Benchmarking original FFN...")
     sample_input = ffn_io[0]["input"][:batch_size].to(device)
     mlp_orig = wrapper.model.transformer.h[0].mlp
-    orig_time = benchmark_ffn(mlp_orig, sample_input, device=device)
+    orig_time = Benchmark_Ffn(mlp_orig, sample_input, device=device)
     print(f"  Original FFN (layer 0): {orig_time:.4f} ms")
 
     # ── 3. Analyze each layer ───────────────────────────
@@ -114,20 +114,20 @@ def analyze_layers(model_name=None, dataset_name=None, dataset_config=None,
                 continue
 
             t0 = time.time()
-            cache = load_cache(cache_dir, device=device)
+            cache = Load_Cache(cache_dir, device=device)
 
             # Taylor inference
-            approx = taylor_predict_batch(test_input.to(device), cache)
+            approx = Taylor_Predict_Batch(test_input.to(device), cache)
 
             # Metrics
-            cos_sim = compute_cosine_similarity(test_output, approx.cpu())
-            mse = compute_mse(test_output, approx.cpu())
+            cos_sim = Compute_Cosine_Similarity(test_output, approx.cpu())
+            mse = Compute_Mse(test_output, approx.cpu())
 
             # Benchmark Taylor FFN
             # Create a Taylor module for timing
             from model import _TaylorFFN
             taylor_module = _TaylorFFN(cache, device)
-            taylor_time = benchmark_ffn(taylor_module, sample_input.to(device),
+            taylor_time = Benchmark_Ffn(taylor_module, sample_input.to(device),
                                         device=device)
 
             speedup = orig_time / taylor_time if taylor_time > 0 else 0
@@ -177,7 +177,7 @@ def analyze_layers(model_name=None, dataset_name=None, dataset_config=None,
     print("Done.")
 
 
-def identify_representative_layers(cosim_csv_path=None):
+def Identify_Representative_Layers(cosim_csv_path=None):
     """Identify most-linear, median, and least-linear layers from Step 1 results."""
     if cosim_csv_path is None:
         cosim_csv_path = os.path.join(config.RESULT_DIR, "step1_layer_cosim.csv")
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     if args.k:
         k_values = [int(x.strip()) for x in args.k.split(",")]
 
-    analyze_layers(
+    Analyze_Layers(
         model_name=args.model,
         dataset_name=args.dataset,
         max_samples=args.max_samples,

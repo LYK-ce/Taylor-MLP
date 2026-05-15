@@ -17,7 +17,7 @@ import torch.nn.functional as F
 # Cosine Similarity & MSE
 # ─────────────────────────────────────────────────────────────
 
-def compute_cosine_similarity(y_true, y_pred):
+def Compute_Cosine_Similarity(y_true, y_pred):
     """
     Batch cosine similarity.
 
@@ -28,16 +28,10 @@ def compute_cosine_similarity(y_true, y_pred):
     Returns:
         avg_cos: float — average cosine similarity over samples
     """
-    n = y_true.shape[0]
-    cos_sum = 0.0
-    for i in range(n):
-        cos_sum += F.cosine_similarity(
-            y_true[i].unsqueeze(0), y_pred[i].unsqueeze(0)
-        ).item()
-    return cos_sum / n
+    return F.cosine_similarity(y_true, y_pred, dim=1).mean().item()
 
 
-def compute_mse(y_true, y_pred):
+def Compute_Mse(y_true, y_pred):
     """
     Batch MSE.
 
@@ -55,8 +49,7 @@ def compute_mse(y_true, y_pred):
 # PPL Computation
 # ─────────────────────────────────────────────────────────────
 
-def compute_ppl(model, input_ids, attention_mask=None, device="cpu",
-                label_key="labels"):
+def Compute_Ppl(model, input_ids, attention_mask=None, device="cpu"):
     """
     Compute Perplexity over a batch of sequences. Also returns timing.
 
@@ -101,7 +94,7 @@ def compute_ppl(model, input_ids, attention_mask=None, device="cpu",
     return ppl, total_time, loss.item(), num_tokens
 
 
-def compute_ppl_over_dataset(model, input_ids_chunks, batch_size=8, device="cpu"):
+def Compute_Ppl_Over_Dataset(model, input_ids_chunks, batch_size=8, device="cpu"):
     """
     Compute PPL over pre-chunked input sequences.
 
@@ -120,7 +113,7 @@ def compute_ppl_over_dataset(model, input_ids_chunks, batch_size=8, device="cpu"
 
     for i in range(0, len(input_ids_chunks), batch_size):
         batch = input_ids_chunks[i:i + batch_size]
-        ppl, elapsed, loss, n_tok = compute_ppl(model, batch, device=device)
+        ppl, elapsed, loss, n_tok = Compute_Ppl(model, batch, device=device)
         total_loss += loss
         total_time += elapsed
         total_tokens += n_tok
@@ -141,7 +134,7 @@ def compute_ppl_over_dataset(model, input_ids_chunks, batch_size=8, device="cpu"
 # Timing Benchmarks
 # ─────────────────────────────────────────────────────────────
 
-def benchmark_ffn(ffn_fn, x_batch, n_warmup=3, n_trials=10, device="cpu"):
+def Benchmark_Ffn(ffn_fn, x_batch, n_warmup=3, n_trials=10, device="cpu"):
     """
     Benchmark a single FFN forward pass (wall-clock time).
 
@@ -174,7 +167,7 @@ def benchmark_ffn(ffn_fn, x_batch, n_warmup=3, n_trials=10, device="cpu"):
     return avg_time_ms
 
 
-def benchmark_model_forward(model, input_ids, n_warmup=3, n_trials=10, device="cpu"):
+def Benchmark_Model_Forward(model, input_ids, n_warmup=3, n_trials=10, device="cpu"):
     """
     Benchmark full model forward pass.
 

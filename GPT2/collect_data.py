@@ -17,10 +17,10 @@ from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
-from utils import compute_centers, precompute_centers, save_cache
+from utils import Compute_Centers, Precompute_Centers, Save_Cache
 
 
-def collect_data(model_name=None, dataset_name=None, dataset_config=None,
+def Collect_Data(model_name=None, dataset_name=None, dataset_config=None,
                  max_samples=None, seq_len=None, batch_size=None, k_values=None,
                  device=None):
     """Phase A: collect FFN I/O, compute K-means centers and Jacobians, save to disk."""
@@ -46,7 +46,7 @@ def collect_data(model_name=None, dataset_name=None, dataset_config=None,
     # ── 1. Load model ──────────────────────────────────
     print("\n[1/4] Loading model...")
     wrapper = GPT2Wrapper(model_name=model_name, device=device)
-    wrapper.load()
+    wrapper.Load()
 
     # ── 2. Load dataset and tokenize ───────────────────
     print("\n[2/4] Loading dataset...")
@@ -85,19 +85,19 @@ def collect_data(model_name=None, dataset_name=None, dataset_config=None,
 
     # ── 3. Run forward pass w/ hooks ───────────────────
     print("\n[3/4] Running forward pass to collect FFN I/O...")
-    wrapper.register_ffn_hooks()
-    wrapper.clear_ffn_io()
+    wrapper.Register_Ffn_Hooks()
+    wrapper.Clear_Ffn_Io()
 
     t0 = time.time()
     for i in range(0, len(input_ids), batch_size):
         batch = input_ids[i:i + batch_size].to(device)
-        wrapper.forward(batch)
+        wrapper.Forward(batch)
     elapsed = time.time() - t0
     print(f"  Done in {elapsed:.1f}s")
 
-    wrapper.remove_ffn_hooks()
+    wrapper.Remove_Ffn_Hooks()
 
-    ffn_io = wrapper.get_ffn_io()
+    ffn_io = wrapper.Get_Ffn_Io()
     print(f"  Collected I/O for {len(ffn_io)} layers")
 
     # ── 4. K-means + Jacobian per layer per k ──────────
@@ -126,14 +126,14 @@ def collect_data(model_name=None, dataset_name=None, dataset_config=None,
             print(f"    k={k} ...", end=" ", flush=True)
 
             # K-means
-            centers = compute_centers(layer_inputs, k)
+            centers = Compute_Centers(layer_inputs, k)
 
             # Precompute Jacobians
-            cache = precompute_centers(ffn_fn, centers, verbose=False)
+            cache = Precompute_Centers(ffn_fn, centers, verbose=False)
 
             # Save
             layer_dir = os.path.join(config.CACHE_DIR, f"layer_{layer_idx}_k_{k}")
-            save_cache(layer_dir, cache, metadata={
+            Save_Cache(layer_dir, cache, metadata={
                 "layer": layer_idx,
                 "k": k,
                 "model": model_name,
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     if args.k:
         k_values = [int(x.strip()) for x in args.k.split(",")]
 
-    collect_data(
+    Collect_Data(
         model_name=args.model,
         dataset_name=args.dataset,
         max_samples=args.max_samples,

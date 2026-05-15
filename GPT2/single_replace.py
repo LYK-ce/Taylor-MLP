@@ -16,11 +16,11 @@ from datasets import load_dataset
 
 import config
 from model import GPT2Wrapper
-from utils import load_cache
-from evaluate import compute_ppl_over_dataset, benchmark_model_forward
+from utils import Load_Cache
+from evaluate import Compute_Ppl_Over_Dataset, Benchmark_Model_Forward
 
 
-def test_single_replacements(model_name=None, dataset_name=None,
+def Test_Single_Replacements(model_name=None, dataset_name=None,
                               dataset_config=None, max_samples=None,
                               seq_len=None, batch_size=None,
                               k_values=None, layer_indices=None, device=None):
@@ -42,7 +42,7 @@ def test_single_replacements(model_name=None, dataset_name=None,
     # ── 1. Load model ──────────────────────────────────
     print("\n[1/4] Loading model...")
     wrapper = GPT2Wrapper(model_name=model_name, device=device)
-    wrapper.load()
+    wrapper.Load()
 
     # ── 2. Tokenize test data ──────────────────────────
     print("[2/4] Preparing test data...")
@@ -75,7 +75,7 @@ def test_single_replacements(model_name=None, dataset_name=None,
 
     # ── 3. Baseline PPL ────────────────────────────────
     print("[3/4] Computing baseline PPL...")
-    baseline = compute_ppl_over_dataset(wrapper.model, test_chunks,
+    baseline = Compute_Ppl_Over_Dataset(wrapper.model, test_chunks,
                                         batch_size=batch_size, device=device)
     print(f"  Baseline PPL: {baseline['ppl']:.4f}  "
           f"({baseline['total_time_s']:.2f}s, "
@@ -83,7 +83,7 @@ def test_single_replacements(model_name=None, dataset_name=None,
 
     # Benchmark original model
     sample_batch = test_chunks[:1]
-    orig_model_time = benchmark_model_forward(
+    orig_model_time = Benchmark_Model_Forward(
         wrapper.model, sample_batch, device=device)
     print(f"  Original model forward: {orig_model_time:.4f} ms")
 
@@ -106,17 +106,17 @@ def test_single_replacements(model_name=None, dataset_name=None,
                 print(f"    k={k}: cache not found, skipping")
                 continue
 
-            cache = load_cache(cache_dir, device=device)
+            cache = Load_Cache(cache_dir, device=device)
 
             # Replace
-            wrapper.replace_ffn(layer_idx, cache)
+            wrapper.Replace_Ffn(layer_idx, cache)
 
             # Measure PPL
-            result = compute_ppl_over_dataset(
+            result = Compute_Ppl_Over_Dataset(
                 wrapper.model, test_chunks, batch_size=batch_size, device=device)
 
             # Measure model speedup
-            taylor_model_time = benchmark_model_forward(
+            taylor_model_time = Benchmark_Model_Forward(
                 wrapper.model, sample_batch, device=device)
             speedup = orig_model_time / taylor_model_time if taylor_model_time > 0 else 0
 
@@ -141,7 +141,7 @@ def test_single_replacements(model_name=None, dataset_name=None,
             })
 
             # Restore
-            wrapper.restore_ffn(layer_idx)
+            wrapper.Restore_Ffn(layer_idx)
 
     # ── Save ────────────────────────────────────────────
     save_path = os.path.join(config.RESULT_DIR, "step2_single_ppl.csv")
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     if args.layers:
         layer_indices = [int(x.strip()) for x in args.layers.split(",")]
 
-    test_single_replacements(
+    Test_Single_Replacements(
         model_name=args.model,
         dataset_name=args.dataset,
         max_samples=args.max_samples,

@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
-def main():
+def Main():
     parser = argparse.ArgumentParser(
         description="GPT-2 Taylor-MLP Experiment Runner")
 
@@ -67,29 +67,29 @@ def main():
         print(f"{'#'*60}\n")
 
         if step == "baseline":
-            from eval_baseline import evaluate_baseline
-            evaluate_baseline(**{k: v for k, v in kwargs.items()
+            from eval_baseline import Evaluate_Baseline
+            Evaluate_Baseline(**{k: v for k, v in kwargs.items()
                                  if k in ["model_name", "dataset_name",
                                           "max_samples"]})
 
         elif step == "collect":
-            from collect_data import collect_data
-            collect_data(**kwargs)
+            from collect_data import Collect_Data
+            Collect_Data(**kwargs)
 
         elif step == "analyze":
-            from layer_analysis import analyze_layers
-            analyze_layers(**kwargs)
+            from layer_analysis import Analyze_Layers
+            Analyze_Layers(**kwargs)
 
         elif step == "single":
-            from single_replace import test_single_replacements
+            from single_replace import Test_Single_Replacements
             skwargs = dict(kwargs)
             if layer_indices:
                 skwargs["layer_indices"] = layer_indices
-            test_single_replacements(**skwargs)
+            Test_Single_Replacements(**skwargs)
 
         elif step == "cumulative":
-            from cumulative_replace import test_cumulative
-            test_cumulative(**kwargs)
+            from cumulative_replace import Test_Cumulative
+            Test_Cumulative(**kwargs)
 
         print(f"\n{'='*60}")
         print(f"Step '{step}' complete.")
@@ -99,4 +99,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    Main()

@@ -21,7 +21,7 @@ import config
 # K-means
 # ─────────────────────────────────────────────────────────────
 
-def compute_centers(data, k):
+def Compute_Centers(data, k):
     """
     K-means clustering on data.
 
@@ -44,7 +44,7 @@ def compute_centers(data, k):
 # Jacobian
 # ─────────────────────────────────────────────────────────────
 
-def compute_jacobian(ffn_fn, x0):
+def Compute_Jacobian(ffn_fn, x0):
     """
     Compute F(X0) and Jacobian J(X0) at a single center.
 
@@ -67,7 +67,7 @@ def compute_jacobian(ffn_fn, x0):
     return f_val, jac
 
 
-def precompute_centers(ffn_fn, centers, verbose=False):
+def Precompute_Centers(ffn_fn, centers, verbose=False):
     """
     Precompute F(X0) and J(X0) for all K-means centers.
 
@@ -84,7 +84,7 @@ def precompute_centers(ffn_fn, centers, verbose=False):
 
     for i in range(k):
         t0 = time.time()
-        f_val, jac = compute_jacobian(ffn_fn, centers[i])
+        f_val, jac = Compute_Jacobian(ffn_fn, centers[i])
         elapsed = time.time() - t0
         if verbose:
             print(f"  Center {i+1}/{k}: {elapsed:.1f}s")
@@ -102,7 +102,7 @@ def precompute_centers(ffn_fn, centers, verbose=False):
 # Taylor Inference
 # ─────────────────────────────────────────────────────────────
 
-def taylor_predict(x, cache):
+def Taylor_Predict(x, cache):
     """
     Taylor inference for a single sample.
 
@@ -128,7 +128,7 @@ def taylor_predict(x, cache):
     return f0 + J0 @ dx
 
 
-def taylor_predict_batch(x_batch, cache):
+def Taylor_Predict_Batch(x_batch, cache):
     """
     Taylor inference for a batch.
 
@@ -172,7 +172,7 @@ def taylor_predict_batch(x_batch, cache):
 # Cache Serialization
 # ─────────────────────────────────────────────────────────────
 
-def save_cache(layer_dir, cache, metadata=None):
+def Save_Cache(layer_dir, cache, metadata=None):
     """
     Save precomputed cache to disk.
 
@@ -197,7 +197,7 @@ def save_cache(layer_dir, cache, metadata=None):
         json.dump(meta, f, indent=2)
 
 
-def load_cache(layer_dir, device="cpu"):
+def Load_Cache(layer_dir, device="cpu"):
     """
     Load precomputed cache from disk.
 
