@@ -9,15 +9,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# ── Dataset ────────────────────────────────────────────
-echo "=== [1/2] Downloading OpenWebText dataset (ModelScope) ==="
-export MODELSCOPE_DATASETS_CACHE="/vepfs-mlp2/c20250205/240804016/Datasets"
-echo "  Cache: ${MODELSCOPE_DATASETS_CACHE}"
-python -c "
-from modelscope.msdatasets import MsDataset
-ds = MsDataset.load('mapjack/openwebtext_dataset', subset_name='default', split='train')
-print(f'Done. {len(ds)} samples.')
-"
+# ── Dataset (HF mirror) ───────────────────────────────
+echo "=== [1/2] Downloading OpenWebText dataset (HF mirror) ==="
+export HF_ENDPOINT="https://hf-mirror.com"
+export HF_DATASETS_CACHE="/vepfs-mlp2/c20250205/240804016/Datasets"
+echo "  Cache: ${HF_DATASETS_CACHE}"
+python -c "from datasets import load_dataset; load_dataset('openwebtext')"
 
 # ── Model ──────────────────────────────────────────────
 echo ""

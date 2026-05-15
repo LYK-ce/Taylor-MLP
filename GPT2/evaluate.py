@@ -12,7 +12,7 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modelscope.msdatasets import MsDataset
+from datasets import load_dataset
 
 
 # ─────────────────────────────────────────────────────────────
@@ -39,13 +39,12 @@ def Tokenize_And_Chunk(tokenizer, dataset_name, dataset_config=None,
     if stride is None:
         stride = seq_len
 
-    ds = MsDataset.load(dataset_name, subset_name=dataset_config, split="train")
-    if hasattr(ds, "to_hf_dataset"):
-        ds = ds.to_hf_dataset()
+    dataset = load_dataset(dataset_name, dataset_config, split="train",
+                           trust_remote_code=True)
 
     texts = []
     total_tokens = 0
-    for example in ds:
+    for example in dataset:
         text = example["text"]
         if not text or not text.strip():
             continue

@@ -17,8 +17,8 @@ MODEL_DIR = os.path.join(ROOT_DIR, "Model")
 MODEL_PATH = os.path.join(MODEL_DIR, "openai-community", "gpt2")
 
 # ── Dataset ────────────────────────────────────────────────
-DATASET_NAME = "mapjack/openwebtext_dataset"
-DATASET_CONFIG = "default"  # ModelScope subset name
+DATASET_NAME = "openwebtext"
+DATASET_CONFIG = None  # No sub-config
 
 # ── Sampling ───────────────────────────────────────────────
 MAX_TRAIN_SAMPLES = 50000   # tokens for K-means fitting
@@ -39,10 +39,10 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(ROOT_DIR, "Cache", "GPT2")
 RESULT_DIR = os.path.join(ROOT_DIR, "Result", "GPT2")
 
-# ── Dataset Cache ──────────────────────────────────────────
-# ModelScope MsDataset cache directory.
-MS_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
-os.environ.setdefault("MODELSCOPE_DATASETS_CACHE", MS_DATASETS_CACHE)
+# ── HF Cache ───────────────────────────────────────────────
+HF_DATASETS_CACHE = "/vepfs-mlp2/c20250205/240804016/Datasets"
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+os.environ.setdefault("HF_DATASETS_CACHE", HF_DATASETS_CACHE)
 
 # ── Misc ───────────────────────────────────────────────────
 SEED = 42

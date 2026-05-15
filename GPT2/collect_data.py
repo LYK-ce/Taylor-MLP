@@ -45,7 +45,7 @@ def Collect_Data(model_name=None, dataset_name=None, dataset_config=None,
 
     # ── 1. Load model ──────────────────────────────────
     print("\n[1/4] Loading model...")
-    wrapper = GPT2Wrapper(model_name=model_name, device=device)
+    wrapper = GPT2Wrapper(device=device)
     wrapper.Load()
 
     # ── 2. Load dataset and tokenize ───────────────────

@@ -37,8 +37,7 @@ class GPT2Wrapper:
         wrapper.restore_ffn(5)
     """
 
-    def __init__(self, model_name=None, device=None):
-        self.model_name = model_name or config.MODEL_NAME
+    def __init__(self, device=None):
         self.device = device or config.DEVICE
         self.model = None
         self.tokenizer = None

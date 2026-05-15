@@ -41,7 +41,7 @@ def Analyze_Layers(model_name=None, dataset_name=None, dataset_config=None,
 
     # ── 1. Load model + collect test FFN I/O ────────────
     print("\n[1/3] Collecting test FFN I/O...")
-    wrapper = GPT2Wrapper(model_name=model_name, device=device)
+    wrapper = GPT2Wrapper(device=device)
     wrapper.Load()
 
     # Fetch 2x samples, use second half as test (disjoint from Phase A train)
